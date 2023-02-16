@@ -1,11 +1,13 @@
 {
   "name": "algoritmo-genetico",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "lite-server --baseDir=app",
+    "dev": "node dist/js/main.js",
     "start": "concurrently \"npm run watch\" \"npm run server\"",
     "compile": "tsc",
     "watch": "tsc -w"
