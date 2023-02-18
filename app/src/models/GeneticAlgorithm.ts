@@ -24,7 +24,15 @@ export class GeneticAlgorithm {
     const productC = new Product(3, 700, 300);
     const productD = new Product(4, 900, 400);
     const productE = new Product(5, 600, 400);
-    this.products.push(productA, productB, productC, productD, productE);
+    const productF = new Product(6, 700, 200);
+    this.products.push(
+      productA,
+      productB,
+      productC,
+      productD,
+      productE,
+      productF
+    );
     this.populationSize = this.products.length;
   }
 
@@ -83,7 +91,6 @@ export class GeneticAlgorithm {
     const arrRoleta = new Array<number>(100);
     let indexAnterior = null;
 
-    //Gerar roleta
     for (let i = 0; i < population.length; i++) {
       for (const chromosome of population) {
         const chromosomeProb = Math.round(
@@ -113,24 +120,42 @@ export class GeneticAlgorithm {
     const populationCopy = [...this.population];
     const parents: Parents[] = [];
 
-    const arrRoleta = this.roleta(populationCopy);
+    for (let i = 0; i <= populationCopy.length / 2; i++) {
+      const arrRoleta = this.roleta(populationCopy);
+      console.log(arrRoleta);
+      //parents
+      //Escolhendo primeiro pai
+      const firstParentChosen = Math.floor(Math.random() * 100);
+      const firstParentChosenId = arrRoleta[firstParentChosen];
+      const firstParentValue = this.population.find((chromosome) => {
+        return chromosome.id === firstParentChosenId;
+      });
+      const firstParentValueIndex = this.population.findIndex((chromosome) => {
+        return chromosome.id === firstParentChosenId;
+      });
+      populationCopy.splice(firstParentValueIndex, 1);
 
-    const secondParentChosen = Math.floor(Math.random() * 100);
-    const secondParentChosenId = arrRoleta[secondParentChosen];
-    const secondParentValue = this.population.find((chromosome) => {
-      return chromosome.id === secondParentChosenId;
-    });
-    const secondParentValueIndex = this.population.findIndex((chromosome) => {
-      return chromosome.id === secondParentChosenId;
-    });
-    populationCopy.splice(secondParentValueIndex, 1);
+      //Escolhendo segundo pai
 
-    let parent = {
-      parent1: firstParentValue as Individual,
-      parent2: secondParentValue as Individual,
-    };
+      const secondParentChosen = Math.floor(Math.random() * 100);
+      const secondParentChosenId = arrRoleta[secondParentChosen];
+      const secondParentValue = this.population.find((chromosome) => {
+        return chromosome.id === secondParentChosenId;
+      });
+      const secondParentValueIndex = this.population.findIndex((chromosome) => {
+        return chromosome.id === secondParentChosenId;
+      });
+      populationCopy.splice(secondParentValueIndex, 1);
 
-    parents.push(parent);
+      let parent = {
+        parent1: firstParentValue as Individual,
+        parent2: secondParentValue as Individual,
+      };
+
+      parents.push(parent);
+    }
+
+    console.log(parents);
   }
 
   public printPopulation(): void {

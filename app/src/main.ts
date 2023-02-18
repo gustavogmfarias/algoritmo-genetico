@@ -7,4 +7,4 @@ genetic.addProducts();
 genetic.initializePopulation();
 
 genetic.printPopulation();
-genetic.roleta();
+genetic.crossOver();
