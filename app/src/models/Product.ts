@@ -6,10 +6,7 @@ export default class Product {
     public readonly weight: number,
     public readonly profit: number
   ) {
-    this._profitPerWeight = Number((profit / weight).toFixed(2));
   }
 
-  get profitPerWeight(): number {
-    return this._profitPerWeight;
-  }
+
 }
