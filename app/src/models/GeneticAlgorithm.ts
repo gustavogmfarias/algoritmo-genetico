@@ -13,10 +13,13 @@ interface Parents {
 }
 export class GeneticAlgorithm {
   private population: Individual[] = [];
-  private populationSize: number;
   private readonly products: Product[] = [];
 
-  constructor(private readonly maxGenerations: number) {}
+  constructor(
+    private readonly populationSize: number,
+    private readonly mutationRate: number,
+    private readonly reproductionRate: number
+  ) {}
 
   public addProducts(): void {
     const productA = new Product(1, 400, 200);
@@ -33,7 +36,6 @@ export class GeneticAlgorithm {
       productE,
       productF
     );
-    this.populationSize = this.products.length;
   }
 
   public initializePopulation(): void {
@@ -92,6 +94,16 @@ export class GeneticAlgorithm {
     let indexAnterior = null;
 
     for (let i = 0; i < population.length; i++) {
+      for (const individual of population) {
+        const everyFitness = population.reduce((acc, individual) => {
+          return (acc += individual.fitness);
+        }, 0);
+
+        individual.probability = Number(
+          (individual.fitness / everyFitness).toFixed(5)
+        );
+      }
+
       for (const chromosome of population) {
         const chromosomeProb = Math.round(
           (chromosome.probability as number) * 100
@@ -118,33 +130,37 @@ export class GeneticAlgorithm {
 
   public crossOver() {
     const populationCopy = [...this.population];
+
     const parents: Parents[] = [];
 
-    for (let i = 0; i <= populationCopy.length / 2; i++) {
-      const arrRoleta = this.roleta(populationCopy);
-      console.log(arrRoleta);
+    for (let i = 0; i < (this.population.length / 2) * this.mutationRate; i++) {
+      let arrRoleta = this.roleta(populationCopy);
       //parents
       //Escolhendo primeiro pai
+
       const firstParentChosen = Math.floor(Math.random() * 100);
       const firstParentChosenId = arrRoleta[firstParentChosen];
       const firstParentValue = this.population.find((chromosome) => {
         return chromosome.id === firstParentChosenId;
       });
-      const firstParentValueIndex = this.population.findIndex((chromosome) => {
+      const firstParentValueIndex = populationCopy.findIndex((chromosome) => {
         return chromosome.id === firstParentChosenId;
       });
+
       populationCopy.splice(firstParentValueIndex, 1);
 
       //Escolhendo segundo pai
+      arrRoleta = this.roleta(populationCopy);
 
       const secondParentChosen = Math.floor(Math.random() * 100);
       const secondParentChosenId = arrRoleta[secondParentChosen];
       const secondParentValue = this.population.find((chromosome) => {
         return chromosome.id === secondParentChosenId;
       });
-      const secondParentValueIndex = this.population.findIndex((chromosome) => {
+      const secondParentValueIndex = populationCopy.findIndex((chromosome) => {
         return chromosome.id === secondParentChosenId;
       });
+
       populationCopy.splice(secondParentValueIndex, 1);
 
       let parent = {
