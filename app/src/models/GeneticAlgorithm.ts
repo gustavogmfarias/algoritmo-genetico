@@ -3,6 +3,8 @@ import Product from "./Product.js";
 interface Individual {
   id: number;
   chromosome: number[];
+  weight: number;
+  profit: number;
   fitness: number;
   generation: number;
   probability?: number;
@@ -13,12 +15,15 @@ interface Parents {
 }
 export class GeneticAlgorithm {
   private population: Individual[] = [];
+  private currentGeneration: number = 1;
   private readonly products: Product[] = [];
 
   constructor(
     private readonly populationSize: number,
     private readonly mutationRate: number,
-    private readonly reproductionRate: number
+    private readonly reproductionRate: number,
+    private readonly packWeight: number,
+    private readonly numberOfGenerations: number
   ) {}
 
   public addProducts(): void {
@@ -44,32 +49,45 @@ export class GeneticAlgorithm {
         id: i,
         chromosome: [],
         fitness: 0,
+        profit: 0,
+        weight: 0,
         generation: 1,
       };
 
       for (let j = 0; j < this.products.length; j++) {
         individual.chromosome.push(Math.round(Math.random()));
       }
-
-      let valueFitness = 0;
-      individual.chromosome.map((individual, index) => {
-        if (individual === 1) {
-          valueFitness += this.products[index].profit;
-        }
-      });
-
-      individual.fitness = valueFitness;
+      this.fitnessFunction(individual);
 
       this.population.push(individual);
     }
 
+    this.probabilityGenerator();
+  }
+
+  public fitnessFunction(individual: Individual) {
+    let valueFitness = 0;
+    let weight = 0;
+    let profit = 0;
+    individual.chromosome.map((individual, index) => {
+      if (individual === 1) {
+        profit += this.products[index].profit;
+        weight += this.products[index].weight;
+      }
+    });
+    individual.weight = weight;
+    individual.profit = profit;
+    individual.fitness = Number((profit / weight).toFixed(2));
+  }
+
+  public probabilityGenerator(): void {
     for (const individual of this.population) {
       const everyFitness = this.population.reduce((acc, individual) => {
         return (acc += individual.fitness);
       }, 0);
 
       individual.probability = Number(
-        (individual.fitness / everyFitness).toFixed(5)
+        (individual.fitness / everyFitness).toFixed(2)
       );
     }
 
@@ -129,11 +147,20 @@ export class GeneticAlgorithm {
   }
 
   public crossOver() {
+    const parents = this.parentsGenerator();
+    this.reproduction(parents);
+  }
+
+  public parentsGenerator(): Parents[] {
     const populationCopy = [...this.population];
 
     const parents: Parents[] = [];
 
-    for (let i = 0; i < (this.population.length / 2) * this.mutationRate; i++) {
+    for (
+      let i = 0;
+      i < (this.population.length / 2) * this.reproductionRate;
+      i++
+    ) {
       let arrRoleta = this.roleta(populationCopy);
       //parents
       //Escolhendo primeiro pai
@@ -171,10 +198,100 @@ export class GeneticAlgorithm {
       parents.push(parent);
     }
 
-    console.log(parents);
+    return parents;
+  }
+
+  public reproduction(parents: Parents[]) {
+    for (let i = 0; i < this.numberOfGenerations - 1; i++) {
+      this.currentGeneration = this.currentGeneration + 1;
+
+      const startAlter = this.getRandomIntInclusive(
+        0,
+        this.products.length - 1
+      );
+
+      const children = parents.map((parents, index) => {
+        const willMutation = this.mutationRate > Math.random();
+
+        let firstParent = parents.parent1;
+
+        const firstParentChromosomeCopy = firstParent.chromosome.slice(
+          startAlter,
+          firstParent.chromosome.length
+        );
+
+        let secondParent = parents.parent2;
+
+        let child: Individual = {
+          id: new Date().getTime(),
+          chromosome: [],
+          fitness: 0,
+          weight: 0,
+          profit: 0,
+          generation: this.currentGeneration,
+        };
+
+        child.chromosome = [...secondParent.chromosome];
+
+        child.chromosome.splice(
+          startAlter,
+          this.products.length - startAlter,
+          ...firstParentChromosomeCopy
+        );
+
+        // mutation
+
+        if (willMutation) {
+          const indexMutation = this.getRandomIntInclusive(
+            0,
+            this.products.length - 1
+          );
+          const newValue = child.chromosome[indexMutation] === 0 ? 1 : 0;
+
+          child.chromosome.splice(indexMutation, 1, newValue);
+        }
+
+        this.fitnessFunction(child);
+        this.population.push(child);
+        this.probabilityGenerator();
+        this.fixPopulation();
+      });
+    }
+    //vai haver mutação?
+    //removo os piores, baseado no tamanho da mochila
+  }
+
+  public fixPopulation(): void {
+    if (this.population.length > this.populationSize) {
+      this.population.splice(
+        this.populationSize,
+        (this.populationSize / 2) * this.reproductionRate
+      );
+    }
+  }
+
+  public getRandomIntInclusive(min: number, max: number) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   public printPopulation(): void {
     console.table(this.population);
+  }
+
+  public result(): void {
+    const individual = this.population.find(
+      (individual) => individual.weight <= this.packWeight
+    );
+
+    if (individual) {
+      console.log(individual);
+    } else {
+      console.log(
+        "Não foi encontrado um indivíduo cujo o peso seja menor que o peso da mochila de:",
+        this.packWeight
+      );
+    }
   }
 }
