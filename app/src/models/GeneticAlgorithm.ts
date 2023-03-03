@@ -102,11 +102,7 @@ export class GeneticAlgorithm {
     });
   }
 
-  public roleta(
-    population: Individual[],
-    giros?: number,
-    txReproducao?: number
-  ): number[] {
+  public roleta(population: Individual[]): number[] {
     const arrRoleta = new Array<number>(100);
     let indexAnterior = null;
 
@@ -149,7 +145,11 @@ export class GeneticAlgorithm {
   public crossOver() {
     for (let i = 0; i < this.numberOfGenerations - 1; i++) {
       this.currentGeneration++;
+      console.log(i);
       const parents = this.parentsGenerator();
+      console.log(i, i);
+      console.table(parents);
+
       this.reproduction(parents);
     }
   }
@@ -180,7 +180,10 @@ export class GeneticAlgorithm {
       populationCopy.splice(firstParentValueIndex, 1);
 
       //Escolhendo segundo pai
+      console.log("testndo roleta segundo pai", populationCopy);
       arrRoleta = this.roleta(populationCopy);
+
+      console.log(arrRoleta);
 
       const secondParentChosen = Math.floor(Math.random() * 100);
       const secondParentChosenId = arrRoleta[secondParentChosen];
@@ -207,11 +210,10 @@ export class GeneticAlgorithm {
   public reproduction(parents: Parents[]) {
     const startAlter = this.getRandomIntInclusive(0, this.products.length - 1);
 
-    const children = parents.map((parents, index) => {
+    parents.map((parents, index) => {
       const willMutation = this.mutationRate > Math.random();
 
       let firstParent = parents.parent1;
-
       const firstParentChromosomeCopy = firstParent.chromosome.slice(
         startAlter,
         firstParent.chromosome.length
@@ -264,6 +266,7 @@ export class GeneticAlgorithm {
       // mutation
 
       if (willMutation) {
+        console.log("houve mutação");
         const indexMutation = this.getRandomIntInclusive(
           0,
           this.products.length - 1
@@ -274,9 +277,12 @@ export class GeneticAlgorithm {
         firstChild.chromosome.splice(indexMutation, 1, newValueFirstChild);
 
         const newValueSecondChild =
-          firstChild.chromosome[indexMutation] === 0 ? 1 : 0;
+          secondChild.chromosome[indexMutation] === 0 ? 1 : 0;
 
+        console.log("indexMutation: ", indexMutation);
+        console.log(secondChild.chromosome);
         secondChild.chromosome.splice(indexMutation, 1, newValueSecondChild);
+        console.log(secondChild.chromosome);
       }
 
       this.fitnessFunction(firstChild);
@@ -284,8 +290,9 @@ export class GeneticAlgorithm {
       this.fitnessFunction(secondChild);
       this.population.push(secondChild);
       this.probabilityGenerator();
-      this.fixPopulation();
     });
+
+    this.fixPopulation();
   }
 
   public fixPopulation(): void {
