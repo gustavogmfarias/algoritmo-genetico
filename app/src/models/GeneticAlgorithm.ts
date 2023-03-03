@@ -66,7 +66,6 @@ export class GeneticAlgorithm {
   }
 
   public fitnessFunction(individual: Individual) {
-    let valueFitness = 0;
     let weight = 0;
     let profit = 0;
     individual.chromosome.map((individual, index) => {
@@ -77,7 +76,7 @@ export class GeneticAlgorithm {
     });
     individual.weight = weight;
     individual.profit = profit;
-    individual.fitness = Number((profit / weight).toFixed(2));
+    individual.fitness = profit;
   }
 
   public probabilityGenerator(): void {
@@ -87,7 +86,7 @@ export class GeneticAlgorithm {
       }, 0);
 
       individual.probability = Number(
-        (individual.fitness / everyFitness).toFixed(2)
+        (individual.fitness / everyFitness).toFixed(6)
       );
     }
 
@@ -143,12 +142,16 @@ export class GeneticAlgorithm {
         }
       }
     }
+
     return arrRoleta;
   }
 
   public crossOver() {
-    const parents = this.parentsGenerator();
-    this.reproduction(parents);
+    for (let i = 0; i < this.numberOfGenerations - 1; i++) {
+      this.currentGeneration++;
+      const parents = this.parentsGenerator();
+      this.reproduction(parents);
+    }
   }
 
   public parentsGenerator(): Parents[] {
@@ -202,61 +205,55 @@ export class GeneticAlgorithm {
   }
 
   public reproduction(parents: Parents[]) {
-    for (let i = 0; i < this.numberOfGenerations - 1; i++) {
-      this.currentGeneration = this.currentGeneration + 1;
+    const startAlter = this.getRandomIntInclusive(0, this.products.length - 1);
 
-      const startAlter = this.getRandomIntInclusive(
-        0,
-        this.products.length - 1
+    const children = parents.map((parents, index) => {
+      const willMutation = this.mutationRate > Math.random();
+
+      let firstParent = parents.parent1;
+
+      const firstParentChromosomeCopy = firstParent.chromosome.slice(
+        startAlter,
+        firstParent.chromosome.length
       );
 
-      const children = parents.map((parents, index) => {
-        const willMutation = this.mutationRate > Math.random();
+      let secondParent = parents.parent2;
 
-        let firstParent = parents.parent1;
+      let child: Individual = {
+        id: new Date().getTime(),
+        chromosome: [],
+        fitness: 0,
+        weight: 0,
+        profit: 0,
+        generation: this.currentGeneration,
+      };
 
-        const firstParentChromosomeCopy = firstParent.chromosome.slice(
-          startAlter,
-          firstParent.chromosome.length
+      child.chromosome = [...secondParent.chromosome];
+
+      child.chromosome.splice(
+        startAlter,
+        this.products.length - startAlter,
+        ...firstParentChromosomeCopy
+      );
+
+      // mutation
+
+      if (willMutation) {
+        const indexMutation = this.getRandomIntInclusive(
+          0,
+          this.products.length - 1
         );
+        const newValue = child.chromosome[indexMutation] === 0 ? 1 : 0;
 
-        let secondParent = parents.parent2;
+        child.chromosome.splice(indexMutation, 1, newValue);
+      }
 
-        let child: Individual = {
-          id: new Date().getTime(),
-          chromosome: [],
-          fitness: 0,
-          weight: 0,
-          profit: 0,
-          generation: this.currentGeneration,
-        };
+      this.fitnessFunction(child);
+      this.population.push(child);
+      this.probabilityGenerator();
+      this.fixPopulation();
+    });
 
-        child.chromosome = [...secondParent.chromosome];
-
-        child.chromosome.splice(
-          startAlter,
-          this.products.length - startAlter,
-          ...firstParentChromosomeCopy
-        );
-
-        // mutation
-
-        if (willMutation) {
-          const indexMutation = this.getRandomIntInclusive(
-            0,
-            this.products.length - 1
-          );
-          const newValue = child.chromosome[indexMutation] === 0 ? 1 : 0;
-
-          child.chromosome.splice(indexMutation, 1, newValue);
-        }
-
-        this.fitnessFunction(child);
-        this.population.push(child);
-        this.probabilityGenerator();
-        this.fixPopulation();
-      });
-    }
     //vai haver mutação?
     //removo os piores, baseado no tamanho da mochila
   }
