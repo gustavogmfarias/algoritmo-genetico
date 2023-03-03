@@ -219,8 +219,14 @@ export class GeneticAlgorithm {
 
       let secondParent = parents.parent2;
 
-      let child: Individual = {
-        id: new Date().getTime(),
+      const secondParentChromosomeCopy = secondParent.chromosome.slice(
+        startAlter,
+        firstParent.chromosome.length
+      );
+
+      //firstChild
+      let firstChild: Individual = {
+        id: this.getRandomIntInclusive(1, 10000),
         chromosome: [],
         fitness: 0,
         weight: 0,
@@ -228,12 +234,31 @@ export class GeneticAlgorithm {
         generation: this.currentGeneration,
       };
 
-      child.chromosome = [...secondParent.chromosome];
+      firstChild.chromosome = [...secondParent.chromosome];
 
-      child.chromosome.splice(
+      firstChild.chromosome.splice(
         startAlter,
         this.products.length - startAlter,
         ...firstParentChromosomeCopy
+      );
+
+      //secondChild
+
+      let secondChild: Individual = {
+        id: this.getRandomIntInclusive(1, 10000),
+        chromosome: [],
+        fitness: 0,
+        weight: 0,
+        profit: 0,
+        generation: this.currentGeneration,
+      };
+
+      secondChild.chromosome = [...firstParent.chromosome];
+
+      secondChild.chromosome.splice(
+        startAlter,
+        this.products.length - startAlter,
+        ...secondParentChromosomeCopy
       );
 
       // mutation
@@ -243,22 +268,35 @@ export class GeneticAlgorithm {
           0,
           this.products.length - 1
         );
-        const newValue = child.chromosome[indexMutation] === 0 ? 1 : 0;
+        const newValueFirstChild =
+          firstChild.chromosome[indexMutation] === 0 ? 1 : 0;
 
-        child.chromosome.splice(indexMutation, 1, newValue);
+        firstChild.chromosome.splice(indexMutation, 1, newValueFirstChild);
+
+        const newValueSecondChild =
+          firstChild.chromosome[indexMutation] === 0 ? 1 : 0;
+
+        secondChild.chromosome.splice(indexMutation, 1, newValueSecondChild);
       }
 
-      this.fitnessFunction(child);
-      this.population.push(child);
+      this.fitnessFunction(firstChild);
+      this.population.push(firstChild);
+      this.fitnessFunction(secondChild);
+      this.population.push(secondChild);
       this.probabilityGenerator();
       this.fixPopulation();
     });
-
-    //vai haver mutação?
-    //removo os piores, baseado no tamanho da mochila
   }
 
   public fixPopulation(): void {
+    this.population.map((individual, index) => {
+      if (this.population.length > this.populationSize) {
+        if (individual.weight > this.packWeight) {
+          this.population.splice(index, 1);
+        }
+      }
+    });
+
     if (this.population.length > this.populationSize) {
       this.population.splice(
         this.populationSize,
