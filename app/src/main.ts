@@ -1,6 +1,6 @@
 import { GeneticAlgorithm } from "./models/GeneticAlgorithm.js";
 
-const genetic = new GeneticAlgorithm(6, 0.03, 1, 1000, 10);
+const genetic = new GeneticAlgorithm(6, 0.03, 1, 2000, 6);
 
 genetic.addProducts();
 
