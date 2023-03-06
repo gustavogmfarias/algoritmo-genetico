@@ -198,6 +198,10 @@ export class GeneticAlgorithm {
       parents.push(parent);
     }
 
+    if (parents.length < 3) {
+      throw new Error("menos de 3 pais");
+    }
+
     return parents;
   }
 
@@ -272,10 +276,7 @@ export class GeneticAlgorithm {
         const newValueSecondChild =
           secondChild.chromosome[indexMutation] === 0 ? 1 : 0;
 
-        console.log("indexMutation: ", indexMutation);
-        console.log(secondChild.chromosome);
         secondChild.chromosome.splice(indexMutation, 1, newValueSecondChild);
-        console.log(secondChild.chromosome);
       }
 
       this.fitnessFunction(firstChild);
@@ -283,24 +284,31 @@ export class GeneticAlgorithm {
       this.fitnessFunction(secondChild);
       this.population.push(secondChild);
       this.probabilityGenerator();
-      this.fixPopulation();
     });
+
+    this.fixPopulation();
+    this.probabilityGenerator();
   }
 
   public fixPopulation(): void {
-    this.population.map((individual, index) => {
+    for (const individual of this.population) {
       if (this.population.length > this.populationSize) {
         if (individual.weight > this.packWeight) {
-          this.population.splice(index, 1);
+          let individualValue = this.population.find(
+            (individualValue) => individualValue.id === individual.id
+          );
+
+          let individualIndex = this.population.indexOf(
+            individualValue as Individual
+          );
+
+          this.population.splice(individualIndex, 1);
         }
       }
-    });
+    }
 
     if (this.population.length > this.populationSize) {
-      this.population.splice(
-        this.populationSize,
-        (this.populationSize / 2) * this.reproductionRate
-      );
+      this.population.splice(this.populationSize, this.populationSize * 10);
     }
   }
 
