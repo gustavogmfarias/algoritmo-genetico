@@ -12,7 +12,7 @@ taxa de mutação_ probabilidade de ocorrer alguma mutação no individual. 0.05
 
 [ x] arrumar excluir quem passa o peso primeirop, ou seja, enquanto apopulação atual tiver peso grande e não ter dado o minimo, eu apgo os que ultrapassam. 
 
-[ ] colocar pra gerar dois filhos
+[ x] colocar pra gerar dois filhos
 
 [ x]corrigir a questão do id dos filhos tirar o gettime
 ----------------------------------------------------------------
